@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  seamstress:
+    build: .
+    container_name: seamstress-runtime
+    volumes:
+      # Mount local scripts directory
+      - ./scripts:/home/seamstress/seamstress
+      # For X11 forwarding (GUI support)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      # For audio support
+      - /dev/snd:/dev/snd
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: host
+    stdin_open: true
+    tty: true
+    # Uncomment if you need to run as privileged for audio
+    # privileged: true
+
+  # Development service with script auto-reload
+  seamstress-dev:
+    build: .
+    container_name: seamstress-dev
+    volumes:
+      - ./scripts:/home/seamstress/seamstress
+    environment:
+      - DISPLAY=${DISPLAY}
+    stdin_open: true
+    tty: true
+    command: ["seamstress"]
+
+  # Service for running a specific script
+  seamstress-script:
+    build: .
+    container_name: seamstress-script
+    volumes:
+      - ./scripts:/home/seamstress/seamstress
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: host
+    stdin_open: true
+    tty: true
+    # Override with: docker-compose run seamstress-script seamstress yourscript.lua
+    command: ["seamstress", "script.lua"]
