@@ -8,6 +8,13 @@ This repository contains Docker configuration for running [Seamstress](https://g
 
 ### Build the Docker Image
 
+**Multi-platform build (recommended):**
+```bash
+# Build for both ARM64 (Apple Silicon) and AMD64 (Intel)
+docker buildx build --platform linux/amd64,linux/arm64 -t seamstress --load .
+```
+
+**Single platform build:**
 ```bash
 docker build -t seamstress .
 ```
@@ -120,22 +127,30 @@ Service for running specific scripts. Override the command to run your script.
 Update the version by changing the build arg:
 
 ```bash
-docker build --build-arg SEAMSTRESS_VERSION=v2.0.0-alpha.4 -t seamstress .
+docker build --build-arg SEAMSTRESS_VERSION=v2.0.0-alpha+build.250109 -t seamstress .
 ```
 
 Or update the ARG in the Dockerfile:
 
 ```dockerfile
-ARG SEAMSTRESS_VERSION=v2.0.0-alpha.4
+ARG SEAMSTRESS_VERSION=v2.0.0-alpha+build.250109
 ```
 
-### Different Architecture
+### Multi-Platform Support
 
-For ARM64/Apple Silicon:
+This Docker setup automatically builds for both ARM64 and AMD64 architectures using Docker Buildx:
 
 ```bash
-docker build --build-arg ARCHITECTURE=aarch64 -t seamstress .
+# Multi-platform build (works on both Apple Silicon and Intel)
+docker buildx build --platform linux/amd64,linux/arm64 -t seamstress --load .
+
+# Push to registry with multi-platform support
+docker buildx build --platform linux/amd64,linux/arm64 -t your-registry/seamstress --push .
 ```
+
+The Dockerfile automatically selects the correct Seamstress binary based on the target platform:
+- `linux/arm64` → `aarch64-linux.tar.gz`  
+- `linux/amd64` → `x86_64-linux-musl.tar.gz`
 
 ### Additional Dependencies
 

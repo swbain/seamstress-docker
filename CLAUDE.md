@@ -10,14 +10,11 @@ This is a Docker containerization setup for [Seamstress](https://github.com/robb
 
 ### Docker Operations
 ```bash
-# Build the Docker image
-docker build -t seamstress .
+# Multi-platform build (recommended)
+docker buildx build --platform linux/amd64,linux/arm64 -t seamstress --load .
 
 # Build with specific version
-docker build --build-arg SEAMSTRESS_VERSION=v2.0.0-alpha.4 -t seamstress .
-
-# Build for ARM64/Apple Silicon
-docker build --build-arg ARCHITECTURE=aarch64 -t seamstress .
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg SEAMSTRESS_VERSION=v2.0.0-alpha+build.250109 -t seamstress --load .
 
 # Run Seamstress REPL
 docker run -it seamstress
@@ -82,10 +79,16 @@ The project provides three Docker Compose services for different use cases:
 - Similar DISPLAY configuration to macOS
 
 ## Version Management
-The Seamstress version is controlled via `SEAMSTRESS_VERSION` build argument in the Dockerfile. Update this to match available releases from the upstream repository.
+The Seamstress version is controlled via `SEAMSTRESS_VERSION` build argument in the Dockerfile. Current version: `v2.0.0-alpha+build.250109`. Update this to match available releases from the upstream repository.
+
+## Multi-Platform Support
+The Dockerfile automatically selects the correct binary based on target platform:
+- `linux/arm64` → `aarch64-linux.tar.gz` (Apple Silicon Macs)
+- `linux/amd64` → `x86_64-linux-musl.tar.gz` (Intel/AMD servers)
 
 ## Security Notes
 - Uses pre-built binaries from official GitHub releases
 - Runs as non-root user
 - Minimal attack surface with slim base image
 - No build tools included in final image
+- "When writing commit messages, never mention claude code or anthropic"

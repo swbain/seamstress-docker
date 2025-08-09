@@ -4,8 +4,15 @@
 FROM debian:bookworm-slim
 
 # Set Seamstress version - update this to get newer versions
-ARG SEAMSTRESS_VERSION=v2.0.0-alpha.3
-ARG ARCHITECTURE=x86_64
+ARG SEAMSTRESS_VERSION=v2.0.0-alpha+build.250109
+
+# Set architecture based on build platform
+ARG TARGETPLATFORM
+RUN case "$TARGETPLATFORM" in \
+    "linux/amd64") echo "x86_64-linux-musl" > /tmp/arch ;; \
+    "linux/arm64") echo "aarch64-linux" > /tmp/arch ;; \
+    *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac
 
 # Install runtime dependencies and curl for downloading
 RUN apt-get update && apt-get install -y \
@@ -18,11 +25,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install pre-built Seamstress binary
-RUN curl -L "https://github.com/robbielyman/seamstress/releases/download/${SEAMSTRESS_VERSION}/seamstress-${SEAMSTRESS_VERSION}-linux-${ARCHITECTURE}.tar.gz" \
+RUN ARCHITECTURE=$(cat /tmp/arch) && \
+    curl -L "https://github.com/robbielyman/seamstress/releases/download/${SEAMSTRESS_VERSION}/${ARCHITECTURE}.tar.gz" \
     | tar -xz -C /tmp && \
-    mv /tmp/seamstress-${SEAMSTRESS_VERSION}-linux-${ARCHITECTURE}/seamstress /usr/local/bin/seamstress && \
+    mv /tmp/${ARCHITECTURE}/bin/seamstress /usr/local/bin/seamstress && \
     chmod +x /usr/local/bin/seamstress && \
-    rm -rf /tmp/seamstress-*
+    rm -rf /tmp/${ARCHITECTURE} /tmp/arch
 
 # Create seamstress user
 RUN useradd -m -s /bin/bash seamstress
