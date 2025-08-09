@@ -1,0 +1,42 @@
+# Git files
+.git
+.gitignore
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Local development files
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini

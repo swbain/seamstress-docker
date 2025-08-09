@@ -1,50 +1,91 @@
-version: '3.8'
+# Modern Docker Compose format (no version field needed)
 
 services:
   seamstress:
     build: .
-    container_name: seamstress-runtime
     volumes:
       # Mount local scripts directory
       - ./scripts:/home/seamstress/seamstress
-      # For X11 forwarding (GUI support)
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # For X11 forwarding (GUI support) - read-only for security
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
     devices:
-      # For audio support
-      - /dev/snd:/dev/snd
+      # Specific audio devices for better security
+      - /dev/snd/controlC0:/dev/snd/controlC0
+      - /dev/snd/pcmC0D0p:/dev/snd/pcmC0D0p
     environment:
-      - DISPLAY=${DISPLAY}
-    network_mode: host
+      - DISPLAY=${DISPLAY:-:0}
+    # Use port mapping instead of host networking when possible
+    ports:
+      - "8080:8080"  # Example port - adjust based on actual needs
     stdin_open: true
     tty: true
+    restart: unless-stopped
+    # Resource limits for security
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    # Security context
+    security_opt:
+      - no-new-privileges:true
     # Uncomment if you need to run as privileged for audio
     # privileged: true
 
   # Development service with script auto-reload
   seamstress-dev:
     build: .
-    container_name: seamstress-dev
     volumes:
       - ./scripts:/home/seamstress/seamstress
     environment:
-      - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY:-:0}
     stdin_open: true
     tty: true
+    restart: unless-stopped
+    # Lighter resource limits for development
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    security_opt:
+      - no-new-privileges:true
     command: ["seamstress"]
 
   # Service for running a specific script
   seamstress-script:
     build: .
-    container_name: seamstress-script
     volumes:
       - ./scripts:/home/seamstress/seamstress
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # For X11 forwarding (GUI support) - read-only for security
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
     devices:
-      - /dev/snd:/dev/snd
+      # Specific audio devices for better security
+      - /dev/snd/controlC0:/dev/snd/controlC0
+      - /dev/snd/pcmC0D0p:/dev/snd/pcmC0D0p
     environment:
-      - DISPLAY=${DISPLAY}
-    network_mode: host
+      - DISPLAY=${DISPLAY:-:0}
+    ports:
+      - "8080:8080"  # Example port - adjust based on actual needs
     stdin_open: true
     tty: true
+    restart: "no"  # Don't restart script execution services
+    # Resource limits for security
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
     # Override with: docker-compose run seamstress-script seamstress yourscript.lua
-    command: ["seamstress", "script.lua"]
+    command: ["seamstress", "hello.lua"]
